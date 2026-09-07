@@ -44,3 +44,6 @@ lucascad-startup*.log
 /outputs/
 /work/
 *.tsbuildinfo
+
+# local tool installs (pnpm, setup stamps)
+/.tooling/

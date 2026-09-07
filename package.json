@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "GPL-3.0-only",
+  "packageManager": "pnpm@11.19.0",
   "engines": {
     "node": ">=22.13.0"
   },
@@ -14,7 +15,9 @@
     "test:dependencies": "node --test tests/dependency-compatibility.test.mjs",
     "test:release": "node --test tests/release-hygiene.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "setup": "./start-cad.sh --setup-only",
+    "test:all": "./scripts/run-tests.sh"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

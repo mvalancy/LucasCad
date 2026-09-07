@@ -1,3 +1,16 @@
+# Dependencies whose install scripts must run to produce working binaries.
+# pnpm 11+ fails the install with ERR_PNPM_IGNORED_BUILDS unless they are
+# approved here; `onlyBuiltDependencies` is the equivalent key for pnpm 10.
+allowBuilds:
+  esbuild: true
+  sharp: true
+  workerd: true
+
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - workerd
+
 # Narrow security overrides for dependencies still pinned by upstream tooling.
 # Recheck and remove as parent packages adopt these patched versions.
 overrides:

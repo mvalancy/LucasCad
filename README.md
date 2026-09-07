@@ -37,32 +37,101 @@ face for interactive orbiting and face selection.
 
 ## Run locally
 
-From PowerShell in this directory:
+LucasCad runs on macOS, Linux, and Windows. The launcher handles first-time
+setup for you: it creates the Python virtualenv, installs the geometry kernel,
+installs Node dependencies, starts both services, and opens the browser.
 
-Install a security-patched Node.js 22.13+ and pnpm 11 (validated with Node
-24.19.0 and pnpm 11.19.0), then create a Python environment. Upgrade pip within
-that environment (`python -m pip install --upgrade "pip>=26.2"`) before installing
-`backend/requirements-dev.txt`. Use a supported, security-patched Python version.
-Review the audit's dependency advisories before installation.
-Run `pnpm install --frozen-lockfile`. Dependencies must be installed on the target
-machine; do not copy another machine's `.venv` or `node_modules`.
+**macOS and Linux**
+
+```bash
+./start-cad.sh
+```
+
+Or, on macOS, double-click **Start LucasCad.command** in Finder.
+
+**Windows**
+
+Double-click **Start LucasCad.bat**, or from PowerShell:
 
 ```powershell
-.\start-cad.ps1
+powershell -ExecutionPolicy Bypass -File .\start-cad.ps1
 ```
+
+Windows blocks unsigned scripts by default, so a bare `.\start-cad.ps1` fails
+with "running scripts is disabled on this system" until you either use the
+`.bat` (which sets the policy for that one run) or allow local scripts once:
+
+```powershell
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+Dependencies are always installed on the target machine. Do not copy another
+machine's `.venv` or `node_modules`; the launcher builds both locally and
+installs Node packages from the frozen lockfile.
+
+The first run downloads roughly 400 MB of Open CASCADE and takes a few minutes.
+Later runs start in seconds. Press `Ctrl+C` to stop both services.
 
 The script starts the geometry service on `127.0.0.1:4311` and the browser UI
 at `http://lucascad.localhost:4310`. The dedicated ports keep LucasCad from
 competing with other local development applications.
 
+### Prerequisites
+
+The launcher checks for these and prints install instructions if either is
+missing or too old:
+
+| Requirement | Version | Notes |
+| --- | --- | --- |
+| Python | 3.11 – 3.14 | CadQuery 2.8 requires >= 3.11. The macOS system Python (3.9) is too old; install `python@3.12`. |
+| Node.js | >= 22.13 | Set by `engines` in `package.json`. Use a security-patched release. |
+
+pnpm does not need to be installed. The version is pinned by `packageManager`
+in `package.json`, which recent pnpm releases honour by switching to it
+automatically; the launcher installs a private copy under `.tooling/` when the
+system pnpm cannot.
+
+The geometry kernel also needs one platform runtime library that LucasCad
+itself does not. The launcher detects both cases and prints the exact fix:
+
+| Platform | Needs | Install |
+| --- | --- | --- |
+| Windows | Visual C++ Redistributable | `winget install Microsoft.VCRedist.2015+.x64`. A clean Windows install ships no C++ runtime, so CadQuery's compiled extensions fail with "DLL load failed". |
+| Linux | libGL and X11 client libraries | `sudo apt-get install -y libgl1 libglx-mesa0 libxrender1 libxext6 libsm6 libice6`. OCP links VTK against libGL even though all rendering happens in your browser. |
+
+### Options
+
+```bash
+./start-cad.sh --setup-only   # install dependencies, then exit
+./start-cad.sh --no-open      # do not open a browser
+```
+
+| Variable | Purpose |
+| --- | --- |
+| `LUCASCAD_PYTHON` | Use a specific Python interpreter |
+| `LUCASCAD_WEB_PORT` | Web UI port (default 4310) |
+| `LUCASCAD_API_PORT` | Geometry service port (default 4311) |
+
 ## Validate
 
+**macOS and Linux**
+
+```bash
+./scripts/run-tests.sh            # backend and frontend
+./scripts/run-tests.sh backend    # pytest only
+./scripts/run-tests.sh frontend   # pnpm test only
+```
+
+**Windows**
+
 ```powershell
-.\.venv\Scripts\python.exe -m pytest backend\test_server.py -q
-pnpm exec vinext build
+.\.venv\Scripts\python.exe -m pytest backend -q
+pnpm test
 pnpm run test:dependencies
 pnpm run test:release
 ```
+
+Run `.\start-cad.ps1 -SetupOnly` first if the environment does not exist yet.
 
 The backend tests verify sketch diagnostics, document replay, Boolean cuts,
 exact volume, solid validity, STEP generation, STEP re-import, and volume

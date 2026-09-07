@@ -18,3 +18,4 @@
 /examples/*.stp export-ignore
 /examples/*.stl export-ignore
 /artifacts export-ignore
+/.tooling export-ignore
